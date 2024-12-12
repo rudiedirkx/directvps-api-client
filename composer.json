@@ -5,7 +5,8 @@
     "license": "MIT",
     "require": {
         "guzzlehttp/guzzle": "^7.9",
-        "rdx/js-dom": "^1.10"
+        "rdx/js-dom": "^1.10",
+        "pragmarx/google2fa": "^8.0"
     },
     "require-dev": {
         "symfony/var-dumper": "^7.2",

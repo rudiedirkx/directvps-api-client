@@ -23,12 +23,10 @@ class Client {
 			'http_errors' => false,
 			'cookies' => $auth->cookies(),
 			'headers' => [
-				'User-agent' => 'directvps/1.0',
+				// 'User-agent' => 'directvps/1.0',
+				'User-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
 			],
 			'allow_redirects' => false,
-			// 'allow_redirects' => [
-			// 	'track_redirects' => true,
-			// ] + RedirectMiddleware::$defaultSettings,
 		]);
 	}
 
@@ -83,6 +81,14 @@ class Client {
 		return urldecode($this->auth->cookies()->getCookieByName('XSRF-TOKEN')->getValue());
 	}
 
+	protected function allowRedirects() : array {
+		return [
+			'allow_redirects' => [
+				'track_redirects' => true,
+			] + RedirectMiddleware::$defaultSettings,
+		];
+	}
+
 	public function getHtml(string $url) : ResponseInterface {
 		$this->_requests[] = ['GET', $url];
 // dump($url, $this->guzzle);
@@ -105,6 +111,23 @@ class Client {
 				'X-csrf-token' => $this->csrfTokenPlain,
 			],
 		]);
+		$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
+		return $rsp;
+	}
+
+	public function postRedirect(string $url, array $body) : ResponseInterface {
+		$this->_requests[] = ['POST', $url];
+// dump($url, $this->guzzle);
+
+		$t = microtime(true);
+		$rsp = $this->guzzle->post($url, [
+			'allow_redirects' => $this->allowRedirects(),
+			'form_params' => $body,
+		]);
+
+		// $historyHeader = $rsp->getHeader(RedirectMiddleware::HISTORY_HEADER);
+// dump($historyHeader);
+
 		$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
 		return $rsp;
 	}
