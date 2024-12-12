@@ -1,0 +1,12 @@
+parameters:
+	level: 5
+	paths:
+		- src/
+	typeAliases:
+		AssocArray: 'array<string, mixed>'
+	# reportUnmatchedIgnoredErrors: true
+	# checkExplicitMixed: true
+	# checkImplicitMixed: true
+	reportMaybes: true
+	excludePaths:
+		- test/
