@@ -26,7 +26,7 @@ class ServerClient {
 		$json = (string) $rsp->getBody();
 		// {"code":0,"data":[],"locale":"nl","message":"OK","status":"success","success":true}
 		$data = json_decode($json, true);
-		if (!$data) {
+		if (!is_array($data)) {
 			throw new RuntimeException(sprintf('Reboot PATCH response not JSON: %s', $json));
 		}
 

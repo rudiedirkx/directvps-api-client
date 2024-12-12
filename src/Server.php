@@ -6,6 +6,7 @@ use RuntimeException;
 
 class Server {
 
+	/** @var AssocArray */
 	protected array $info = [];
 
 	final public function __construct(
@@ -20,9 +21,12 @@ class Server {
 	}
 
 	public function getStatus() : ?string {
-		return $this->info['status']['plain'] ?? null;
+		return $this->info['status']['plain'] ?? null; // @phpstan-ignore offsetAccess.nonOffsetAccessible
 	}
 
+	/**
+	 * @return list<string>
+	 */
 	public function getIpAddresses() : ?array {
 		return $this->info['ipaddresses'] ?? null;
 	}
@@ -38,6 +42,9 @@ class Server {
 		return sprintf('%s (%s)', $this->hostname, $this->label);
 	}
 
+	/**
+	 * @param AssocArray $info
+	 */
 	static public function fromServersApiV2(array $info) : static {
 		if (!isset($info['platform'], $info['id'], $info['hostname'], $info['label'])) {
 			throw new RuntimeException(sprintf("Can't construct Server from info array: %s", json_encode($info)));

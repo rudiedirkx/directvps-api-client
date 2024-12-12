@@ -6,6 +6,7 @@ use RuntimeException;
 
 class AccountClient {
 
+	/** @var list<Server> */
 	protected array $servers;
 
 	public function __construct(
@@ -13,12 +14,19 @@ class AccountClient {
 		readonly public Account $account,
 	) {}
 
+	/**
+	 * @return list<Server>
+	 */
 	public function getServers() : array {
 		if (isset($this->servers)) return $this->servers;
 
 		$rsp = $this->client->getJson(sprintf('https://mijn.directvps.nl/api/v2/%s/servers', $this->account->id));
 		$json = (string) $rsp->getBody();
 		$data = json_decode($json, true);
+
+		if (!is_array($data) || !is_array($data['servers'] ?? '')) {
+			throw new RuntimeException(sprintf("Invalid servers response JSON: %s", $json));
+		}
 
 		$servers = [];
 		foreach ($data['servers'] as $info) {

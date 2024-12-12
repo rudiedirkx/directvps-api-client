@@ -12,9 +12,11 @@ use rdx\jsdom\Node;
 class Client {
 
 	protected Guzzle $guzzle;
+	/** @var list<array{string, string, ?float}> */
 	public array $_requests = [];
 	protected string $csrfTokenPlain = '';
 	// protected string $csrfTokenEncrypted = '';
+	/** @var list<Account> */
 	protected array $accounts = [];
 
 	public function __construct(
@@ -49,7 +51,8 @@ class Client {
 
 		$this->accounts = [];
 		foreach ($accountRows as $a) {
-			$id = explode('/', trim(parse_url($a['href'], PHP_URL_PATH), '/'))[0];
+			$path = parse_url($a['href'], PHP_URL_PATH) ?: $a['href'];
+			$id = explode('/', trim($path, '/'))[0];
 			$label = $a->textContent;
 			$this->accounts[] = new Account($id, $label);
 		}
@@ -57,6 +60,9 @@ class Client {
 		return true;
 	}
 
+	/**
+	 * @return list<Account>
+	 */
 	public function getAccounts() : array {
 		return $this->accounts;
 	}
@@ -82,6 +88,9 @@ class Client {
 		return urldecode($this->auth->cookies()->getCookieByName('XSRF-TOKEN')->getValue());
 	}
 
+	/**
+	 * @return AssocArray
+	 */
 	protected function allowRedirects() : array {
 		return [
 			'allow_redirects' => [
@@ -91,14 +100,14 @@ class Client {
 	}
 
 	public function getHtml(string $url) : ResponseInterface {
-		$this->_requests[] = ['GET', $url];
+		$this->_requests[] = ['GET', $url, null];
 		return $this->wrapRequest(function() use ($url) {
 			return $this->guzzle->get($url);
 		});
 	}
 
 	public function getJson(string $url) : ResponseInterface {
-		$this->_requests[] = ['GET', $url];
+		$this->_requests[] = ['GET', $url, null];
 		return $this->wrapRequest(function() use ($url) {
 			return $this->guzzle->get($url, [
 				'headers' => [
@@ -110,8 +119,11 @@ class Client {
 		});
 	}
 
+	/**
+	 * @param AssocArray $body
+	 */
 	public function postRedirect(string $url, array $body) : ResponseInterface {
-		$this->_requests[] = ['POST', $url];
+		$this->_requests[] = ['POST', $url, null];
 		return $this->wrapRequest(function() use ($url, $body) {
 			return $this->guzzle->post($url, [
 				'allow_redirects' => $this->allowRedirects(),
@@ -120,8 +132,11 @@ class Client {
 		});
 	}
 
+	/**
+	 * @param AssocArray $body
+	 */
 	public function patchJson(string $url, array $body) : ResponseInterface {
-		$this->_requests[] = ['PATCH', $url];
+		$this->_requests[] = ['PATCH', $url, null];
 		return $this->wrapRequest(function() use ($url, $body) {
 			$options = [
 				'headers' => [
@@ -141,7 +156,7 @@ class Client {
 			return $request();
 		}
 		finally {
-			$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
+			$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t; // @phpstan-ignore assign.propertyType
 		}
 	}
 
