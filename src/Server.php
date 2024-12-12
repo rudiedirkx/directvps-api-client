@@ -9,8 +9,8 @@ class Server {
 	protected array $info = [];
 
 	final public function __construct(
-		protected string $platform,
-		protected string $id,
+		readonly public string $platform,
+		readonly public string $id,
 		protected string $hostname,
 		protected string $label,
 	) {}

@@ -24,16 +24,22 @@ if (!preg_match('#^[^/]+/[^/]+$#', $serverKey)) {
 [$serverPlatform, $serverId] = explode('/', $serverKey);
 
 $client = new Client(new AuthSession(CONTROLPANEL_SESSION));
+// $client = new Client(new AuthWeb(ACC_USERNAME, ACC_PASSWORD, ACC_2FA_SECRET));
 
 $account = new AccountClient($client, new Account($accountId, 'name'));
 $server = new ServerClient($account, new Server($serverPlatform, $serverId, 'hostname', 'label'));
 dump($server);
 
+echo "Logging in...\n";
 if (!$client->logIn()) {
 	echo "Not logged in\n";
 	exit(1);
 }
+dump($client->_requests);
 
 echo "Rebooting...\n";
 
 $server->reboot();
+echo "OK\n";
+
+dump($client->_requests);

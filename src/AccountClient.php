@@ -10,13 +10,13 @@ class AccountClient {
 
 	public function __construct(
 		readonly public Client $client,
-		protected Account $account,
+		readonly public Account $account,
 	) {}
 
 	public function getServers() : array {
 		if (isset($this->servers)) return $this->servers;
 
-		$rsp = $this->client->getJson(sprintf('https://mijn.directvps.nl/api/v2/%s/servers', $this->account->getId()));
+		$rsp = $this->client->getJson(sprintf('https://mijn.directvps.nl/api/v2/%s/servers', $this->account->id));
 		$json = (string) $rsp->getBody();
 		$data = json_decode($json, true);
 

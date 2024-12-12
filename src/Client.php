@@ -2,6 +2,7 @@
 
 namespace rdx\directvps;
 
+use Closure;
 use RuntimeException;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\RedirectMiddleware;
@@ -84,52 +85,64 @@ class Client {
 	protected function allowRedirects() : array {
 		return [
 			'allow_redirects' => [
-				'track_redirects' => true,
+				'track_redirects' => false,
 			] + RedirectMiddleware::$defaultSettings,
 		];
 	}
 
 	public function getHtml(string $url) : ResponseInterface {
 		$this->_requests[] = ['GET', $url];
-// dump($url, $this->guzzle);
-
-		$t = microtime(true);
-		$rsp = $this->guzzle->get($url);
-		$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
-		return $rsp;
+		return $this->wrapRequest(function() use ($url) {
+			return $this->guzzle->get($url);
+		});
 	}
 
 	public function getJson(string $url) : ResponseInterface {
 		$this->_requests[] = ['GET', $url];
-// dump($url, $this->guzzle);
-
-		$t = microtime(true);
-		$rsp = $this->guzzle->get($url, [
-			'headers' => [
-				'Accept' => 'application/json',
-				'X-xsrf-token' => $this->getCsrfTokenCookie(),
-				'X-csrf-token' => $this->csrfTokenPlain,
-			],
-		]);
-		$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
-		return $rsp;
+		return $this->wrapRequest(function() use ($url) {
+			return $this->guzzle->get($url, [
+				'headers' => [
+					'Accept' => 'application/json',
+					'X-xsrf-token' => $this->getCsrfTokenCookie(),
+					'X-csrf-token' => $this->csrfTokenPlain,
+				],
+			]);
+		});
 	}
 
 	public function postRedirect(string $url, array $body) : ResponseInterface {
 		$this->_requests[] = ['POST', $url];
-// dump($url, $this->guzzle);
+		return $this->wrapRequest(function() use ($url, $body) {
+			return $this->guzzle->post($url, [
+				'allow_redirects' => $this->allowRedirects(),
+				'form_params' => $body,
+			]);
+		});
+	}
 
+	public function patchJson(string $url, array $body) : ResponseInterface {
+		$this->_requests[] = ['PATCH', $url];
+		return $this->wrapRequest(function() use ($url, $body) {
+			$options = [
+				'headers' => [
+					'Accept' => 'application/json',
+					'X-xsrf-token' => $this->getCsrfTokenCookie(),
+					'X-csrf-token' => $this->csrfTokenPlain,
+				],
+			];
+			if (count($body)) $options['form_params'] = $body;
+			return $this->guzzle->patch($url, $options);
+		});
+	}
+
+	protected function wrapRequest(Closure $request) : ResponseInterface {
 		$t = microtime(true);
-		$rsp = $this->guzzle->post($url, [
-			'allow_redirects' => $this->allowRedirects(),
-			'form_params' => $body,
-		]);
-
-		// $historyHeader = $rsp->getHeader(RedirectMiddleware::HISTORY_HEADER);
-// dump($historyHeader);
-
-		$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
-		return $rsp;
+		try {
+			return $request();
+		}
+		finally {
+			$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
+		}
 	}
 
 }
