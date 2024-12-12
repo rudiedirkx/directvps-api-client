@@ -8,7 +8,11 @@ require __DIR__ . '/inc.bootstrap.php';
 
 $client = new Client(new AuthSession(CONTROLPANEL_SESSION));
 
-var_dump($client->logIn());
+if (!$client->logIn()) {
+	echo "Not logged in\n";
+	exit(1);
+}
+
 dump($accounts = $client->getAccounts());
 
 $account = $client->chooseAccount(reset($accounts));

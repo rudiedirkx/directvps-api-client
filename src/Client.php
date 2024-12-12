@@ -25,9 +25,10 @@ class Client {
 			'headers' => [
 				'User-agent' => 'directvps/1.0',
 			],
-			'allow_redirects' => [
-				'track_redirects' => true,
-			] + RedirectMiddleware::$defaultSettings,
+			'allow_redirects' => false,
+			// 'allow_redirects' => [
+			// 	'track_redirects' => true,
+			// ] + RedirectMiddleware::$defaultSettings,
 		]);
 	}
 
@@ -86,20 +87,26 @@ class Client {
 		$this->_requests[] = ['GET', $url];
 // dump($url, $this->guzzle);
 
-		return $this->guzzle->get($url);
+		$t = microtime(true);
+		$rsp = $this->guzzle->get($url);
+		$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
+		return $rsp;
 	}
 
 	public function getJson(string $url) : ResponseInterface {
 		$this->_requests[] = ['GET', $url];
 // dump($url, $this->guzzle);
 
-		return $this->guzzle->get($url, [
+		$t = microtime(true);
+		$rsp = $this->guzzle->get($url, [
 			'headers' => [
 				'Accept' => 'application/json',
 				'X-xsrf-token' => $this->getCsrfTokenCookie(),
 				'X-csrf-token' => $this->csrfTokenPlain,
 			],
 		]);
+		$this->_requests[count($this->_requests)-1][2] = microtime(true) - $t;
+		return $rsp;
 	}
 
 }

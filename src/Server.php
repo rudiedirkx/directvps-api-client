@@ -15,9 +15,9 @@ class Server {
 		protected string $label,
 	) {}
 
-	// public function getKey() : string {
-	// 	return sprintf('%s/%s', $this->platform, $this->id);
-	// }
+	public function getKey() : string {
+		return sprintf('%s/%s', $this->platform, $this->id);
+	}
 
 	public function getStatus() : ?string {
 		return $this->info['status']['plain'] ?? null;
@@ -25,6 +25,13 @@ class Server {
 
 	public function getIpAddresses() : ?array {
 		return $this->info['ipaddresses'] ?? null;
+	}
+
+	public function __debugInfo() : array {
+		return [
+			'key' => $this->getKey(),
+			'status' => $this->getStatus(),
+		];
 	}
 
 	public function __toString() : string {
