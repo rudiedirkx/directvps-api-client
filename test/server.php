@@ -6,8 +6,8 @@ use rdx\directvps\Client;
 
 require __DIR__ . '/inc.bootstrap.php';
 
-$client = new Client(new AuthSession(CONTROLPANEL_SESSION));
-// $client = new Client($webAuth = new AuthWeb(ACC_USERNAME, ACC_PASSWORD, ACC_2FA_SECRET));
+// $client = new Client(new AuthSession(CONTROLPANEL_SESSION));
+$client = new Client($webAuth = new AuthWeb(ACC_USERNAME, ACC_PASSWORD, ACC_2FA_SECRET));
 
 if (!$client->logIn()) {
 	echo "Not logged in\n";
